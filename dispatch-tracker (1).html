@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dispatch Register</title>
+<link rel="manifest" id="manifest-link">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dispatch">
+<meta name="theme-color" content="#1C2B33">
+<style>
+  :root{
+    --ink:#1C2B33;
+    --paper:#F7F4ED;
+    --paper-raised:#FFFFFF;
+    --saffron:#E08D3C;
+    --saffron-deep:#A9601C;
+    --slate:#5C6B73;
+    --hairline:#D9D2C2;
+    --success:#3D7A5C;
+    --success-bg:#E5EFE8;
+    --danger:#B3492F;
+    --danger-bg:#F6E7E1;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:100px;
+  }
+  @font-face{
+    font-family:'Spectral';
+    src:local('Spectral');
+  }
+  .ledger-num{
+    font-family:'Courier New', ui-monospace, monospace;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---- Header ---- */
+  header{
+    background:var(--ink);
+    color:var(--paper);
+    padding:18px 18px 16px;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .header-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .brand{
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:0.02em;
+  }
+  .brand .dot{color:var(--saffron);}
+  .header-sub{
+    font-size:11.5px;
+    color:#B9C2C7;
+    margin-top:2px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+  .stats-strip{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+  }
+  .stat-pill{
+    flex:1;
+    background:rgba(255,255,255,0.07);
+    border:0.5px solid rgba(255,255,255,0.12);
+    border-radius:10px;
+    padding:8px 10px;
+  }
+  .stat-pill .n{
+    font-size:18px;
+    font-weight:700;
+    font-family:'Courier New', monospace;
+  }
+  .stat-pill .l{
+    font-size:10px;
+    color:#B9C2C7;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin-top:1px;
+  }
+
+  /* ---- Toolbar ---- */
+  .toolbar{
+    padding:14px 16px 6px;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .search-wrap{
+    flex:1;
+    position:relative;
+  }
+  .search-wrap input{
+    width:100%;
+    height:40px;
+    border-radius:10px;
+    border:0.5px solid var(--hairline);
+    background:var(--paper-raised);
+    padding:0 12px 0 34px;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .search-wrap i{
+    position:absolute;
+    left:11px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--slate);
+    font-size:16px;
+  }
+  .filter-btn{
+    height:40px;
+    width:40px;
+    border-radius:10px;
+    border:0.5px solid var(--hairline);
+    background:var(--paper-raised);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink);
+    font-size:17px;
+    flex-shrink:0;
+    position:relative;
+  }
+  .filter-btn.active{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .filter-chip-row{
+    display:flex;
+    gap:6px;
+    padding:10px 16px 4px;
+    overflow-x:auto;
+  }
+  .chip{
+    flex-shrink:0;
+    font-size:12.5px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:0.5px solid var(--hairline);
+    background:var(--paper-raised);
+    color:var(--slate);
+  }
+  .chip.on{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+    font-weight:500;
+  }
+
+  /* ---- Entry list ---- */
+  .list{
+    padding:10px 16px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--slate);
+  }
+  .empty-state i{
+    font-size:32px;
+    color:var(--hairline);
+    display:block;
+    margin-bottom:10px;
+  }
+  .empty-state p{margin:0;font-size:14px;}
+
+  .docket{
+    background:var(--paper-raised);
+    border:0.5px solid var(--hairline);
+    border-radius:12px;
+    display:flex;
+    overflow:hidden;
+    position:relative;
+  }
+  .docket-stub{
+    width:46px;
+    flex-shrink:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      var(--ink) 0px, var(--ink) 6px, transparent 6px, transparent 11px
+    );
+    background-color:var(--ink);
+    background-image:
+      radial-gradient(circle at 46px 0, transparent 6px, var(--paper) 6.5px),
+      radial-gradient(circle at 46px 100%, transparent 6px, var(--paper) 6.5px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+  .docket-stub::before{
+    content:'';
+    position:absolute;
+    top:0; bottom:0; right:-1px;
+    border-right:2px dashed rgba(247,244,237,0.35);
+  }
+  .docket-stub .sno{
+    color:var(--paper);
+    font-family:'Courier New', monospace;
+    font-size:14px;
+    font-weight:700;
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    letter-spacing:0.05em;
+  }
+  .docket-body{
+    flex:1;
+    padding:12px 14px;
+    min-width:0;
+  }
+  .docket-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .docket-product{
+    font-size:14.5px;
+    font-weight:500;
+    line-height:1.4;
+    color:var(--ink);
+    word-break:break-word;
+  }
+  .status-badge{
+    flex-shrink:0;
+    font-size:11px;
+    font-weight:500;
+    padding:4px 9px;
+    border-radius:999px;
+    white-space:nowrap;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .status-badge.pending{background:var(--danger-bg);color:var(--danger);}
+  .status-badge.dispatched{background:var(--success-bg);color:var(--success);}
+  .status-badge i{font-size:12px;}
+
+  .docket-meta{
+    margin-top:9px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px 10px;
+    font-size:12.5px;
+    color:var(--slate);
+  }
+  .meta-item{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    min-width:0;
+  }
+  .meta-item i{font-size:13px;color:var(--saffron-deep);flex-shrink:0;}
+  .meta-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .meta-item a{color:var(--ink);text-decoration:none;}
+
+  .docket-actions{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    border-top:0.5px dashed var(--hairline);
+    padding-top:9px;
+  }
+  .docket-actions button{
+    flex:1;
+    height:32px;
+    border-radius:8px;
+    border:0.5px solid var(--hairline);
+    background:var(--paper);
+    font-size:12.5px;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+  }
+  .docket-actions button i{font-size:14px;}
+  .docket-actions button.danger{color:var(--danger);}
+  .docket-actions button.toggle-dispatch.is-dispatched{
+    background:var(--success-bg);
+    border-color:var(--success-bg);
+    color:var(--success);
+  }
+
+  /* ---- FAB ---- */
+  .fab{
+    position:fixed;
+    right:18px;
+    bottom:24px;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:var(--saffron);
+    color:var(--ink);
+    border:none;
+    font-size:26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:30;
+  }
+  .fab:active{transform:scale(0.94);}
+
+  /* ---- Sheet (entry form) ---- */
+  .sheet-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(28,43,51,0.5);
+    z-index:50;
+    display:flex;
+    align-items:flex-end;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s;
+  }
+  .sheet-overlay.open{opacity:1;pointer-events:auto;}
+  .sheet{
+    background:var(--paper);
+    width:100%;
+    max-height:88vh;
+    border-radius:18px 18px 0 0;
+    padding:8px 18px 22px;
+    overflow-y:auto;
+    transform:translateY(100%);
+    transition:transform 0.25s cubic-bezier(.32,.72,0,1);
+  }
+  .sheet-overlay.open .sheet{transform:translateY(0);}
+  .sheet-handle{
+    width:36px;height:4px;border-radius:99px;
+    background:var(--hairline);
+    margin:8px auto 14px;
+  }
+  .sheet h2{
+    font-size:17px;
+    font-weight:700;
+    margin:0 0 16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .sheet h2 i{color:var(--saffron-deep);}
+  .field{margin-bottom:13px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:500;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-bottom:5px;
+  }
+  .field input, .field textarea{
+    width:100%;
+    border:0.5px solid var(--hairline);
+    background:var(--paper-raised);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:15px;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .field textarea{
+    min-height:64px;
+    resize:vertical;
+    line-height:1.5;
+  }
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .form-actions{
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
+  .form-actions button{
+    flex:1;
+    height:46px;
+    border-radius:11px;
+    font-size:14.5px;
+    font-weight:500;
+    border:none;
+  }
+  .btn-cancel{
+    background:var(--paper-raised);
+    border:0.5px solid var(--hairline) !important;
+    color:var(--ink);
+  }
+  .btn-save{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .err{
+    color:var(--danger);
+    font-size:12px;
+    margin-top:4px;
+    display:none;
+  }
+  .err.show{display:block;}
+
+  .toast{
+    position:fixed;
+    bottom:96px;
+    left:50%;
+    transform:translateX(-50%) translateY(10px);
+    background:var(--ink);
+    color:var(--paper);
+    font-size:13px;
+    padding:10px 18px;
+    border-radius:99px;
+    z-index:60;
+    opacity:0;
+    pointer-events:none;
+    transition:all 0.2s;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast i{font-size:14px;color:var(--success);}
+
+  .install-banner{
+    margin:12px 16px 0;
+    background:var(--success-bg);
+    color:var(--success);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:12.5px;
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    line-height:1.4;
+  }
+  .install-banner i{font-size:15px;margin-top:1px;flex-shrink:0;}
+  .install-banner b{font-weight:500;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <div class="brand">Dispatch<span class="dot">•</span>Register</div>
+      <div class="header-sub">Order &amp; dispatch tracking</div>
+    </div>
+  </div>
+  <div class="stats-strip">
+    <div class="stat-pill">
+      <div class="n" id="stat-total">0</div>
+      <div class="l">Total</div>
+    </div>
+    <div class="stat-pill">
+      <div class="n" id="stat-pending" style="color:#F0997B;">0</div>
+      <div class="l">Pending</div>
+    </div>
+    <div class="stat-pill">
+      <div class="n" id="stat-dispatched" style="color:#97C459;">0</div>
+      <div class="l">Dispatched</div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <i class="ti ti-search"></i>
+    <input type="text" id="search-input" placeholder="Search name, city, mobile, product...">
+  </div>
+</div>
+<div class="filter-chip-row" id="filter-chips">
+  <div class="chip on" data-filter="all">All</div>
+  <div class="chip" data-filter="pending">Pending</div>
+  <div class="chip" data-filter="dispatched">Dispatched</div>
+</div>
+
+<div class="list" id="list"></div>
+
+<button class="fab" id="fab-add" aria-label="Add new entry"><i class="ti ti-plus"></i></button>
+
+<div class="sheet-overlay" id="sheet-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="sheet-title"><i class="ti ti-clipboard-text"></i><span>New entry</span></h2>
+    <input type="hidden" id="edit-id">
+    <div class="field-row">
+      <div class="field">
+        <label for="f-date">Date</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field">
+        <label for="f-mobile">Mobile number</label>
+        <input type="tel" id="f-mobile" placeholder="98765 43210" inputmode="numeric">
+        <div class="err" id="err-mobile">Enter a valid mobile number</div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-product">Product items</label>
+      <textarea id="f-product" placeholder="e.g. 2x Cotton Saree (Blue), 1x Blouse Piece"></textarea>
+      <div class="err" id="err-product">Add at least one product item</div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="f-city">City</label>
+        <input type="text" id="f-city" placeholder="City name">
+      </div>
+      <div class="field">
+        <label for="f-alt">Alternative number</label>
+        <input type="tel" id="f-alt" placeholder="Optional" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:var(--ink);font-weight:400;">
+        <input type="checkbox" id="f-dispatched" style="width:18px;height:18px;margin:0;">
+        Mark as dispatched
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" id="btn-cancel">Cancel</button>
+      <button class="btn-save" id="btn-save">Save entry</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toast-text"></span></div>
+
+<script>
+const DEFAULT_MANIFEST = {
+  name: "Dispatch Register",
+  short_name: "Dispatch",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#1C2B33",
+  theme_color: "#1C2B33",
+  icons: []
+};
+try{
+  const blob = new Blob([JSON.stringify(DEFAULT_MANIFEST)], {type:'application/json'});
+  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+}catch(e){}
+
+const STORAGE_KEY = 'dispatch_register_entries_v1';
+let entries = [];
+let activeFilter = 'all';
+let searchTerm = '';
+
+function loadEntries(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    entries = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    entries = [];
+  }
+}
+function saveEntries(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }catch(e){}
+}
+
+function uid(){
+  return 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+}
+
+function formatDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso + 'T00:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function todayISO(){
+  const d = new Date();
+  const tz = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - tz*60000);
+  return local.toISOString().slice(0,10);
+}
+
+function render(){
+  const list = document.getElementById('list');
+  let filtered = entries.filter(e=>{
+    if(activeFilter === 'pending' && e.dispatched) return false;
+    if(activeFilter === 'dispatched' && !e.dispatched) return false;
+    if(searchTerm){
+      const hay = [e.mobile, e.product, e.city, e.alt].join(' ').toLowerCase();
+      if(!hay.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  filtered = filtered.slice().sort((a,b) => b.createdAt - a.createdAt);
+
+  document.getElementById('stat-total').textContent = entries.length;
+  document.getElementById('stat-pending').textContent = entries.filter(e=>!e.dispatched).length;
+  document.getElementById('stat-dispatched').textContent = entries.filter(e=>e.dispatched).length;
+
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty-state">
+      <i class="ti ti-package-off"></i>
+      <p>${entries.length === 0 ? 'No entries yet. Tap + to add your first dispatch.' : 'No entries match your search.'}</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((e, idx) => {
+    const sno = entries.length - entries.findIndex(x => x.id === e.id);
+    const statusClass = e.dispatched ? 'dispatched' : 'pending';
+    const statusIcon = e.dispatched ? 'ti-circle-check' : 'ti-clock';
+    const statusLabel = e.dispatched ? 'Dispatched' : 'Pending';
+    return `
+    <div class="docket" data-id="${e.id}">
+      <div class="docket-stub"><span class="sno">#${String(sno).padStart(3,'0')}</span></div>
+      <div class="docket-body">
+        <div class="docket-top">
+          <div class="docket-product">${escapeHtml(e.product)}</div>
+          <div class="status-badge ${statusClass}"><i class="ti ${statusIcon}"></i>${statusLabel}</div>
+        </div>
+        <div class="docket-meta">
+          <div class="meta-item"><i class="ti ti-calendar"></i><span>${formatDate(e.date)}</span></div>
+          <div class="meta-item"><i class="ti ti-map-pin"></i><span>${escapeHtml(e.city) || '—'}</span></div>
+          <div class="meta-item"><i class="ti ti-phone"></i><a href="tel:${escapeHtml(e.mobile)}">${escapeHtml(e.mobile)}</a></div>
+          <div class="meta-item"><i class="ti ti-phone-plus"></i><span>${escapeHtml(e.alt) || '—'}</span></div>
+        </div>
+        <div class="docket-actions">
+          <button class="toggle-dispatch ${e.dispatched ? 'is-dispatched' : ''}" data-action="toggle" data-id="${e.id}">
+            <i class="ti ${e.dispatched ? 'ti-rotate-2' : 'ti-truck-delivery'}"></i>${e.dispatched ? 'Mark pending' : 'Mark dispatched'}
+          </button>
+          <button data-action="edit" data-id="${e.id}"><i class="ti ti-edit"></i>Edit</button>
+          <button class="danger" data-action="delete" data-id="${e.id}"><i class="ti ti-trash"></i>Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+const overlay = document.getElementById('sheet-overlay');
+function openSheet(editEntry){
+  document.getElementById('err-mobile').classList.remove('show');
+  document.getElementById('err-product').classList.remove('show');
+  if(editEntry){
+    document.querySelector('#sheet-title span').textContent = 'Edit entry';
+    document.getElementById('edit-id').value = editEntry.id;
+    document.getElementById('f-date').value = editEntry.date || todayISO();
+    document.getElementById('f-mobile').value = editEntry.mobile || '';
+    document.getElementById('f-product').value = editEntry.product || '';
+    document.getElementById('f-city').value = editEntry.city || '';
+    document.getElementById('f-alt').value = editEntry.alt || '';
+    document.getElementById('f-dispatched').checked = !!editEntry.dispatched;
+  }else{
+    document.querySelector('#sheet-title span').textContent = 'New entry';
+    document.getElementById('edit-id').value = '';
+    document.getElementById('f-date').value = todayISO();
+    document.getElementById('f-mobile').value = '';
+    document.getElementById('f-product').value = '';
+    document.getElementById('f-city').value = '';
+    document.getElementById('f-alt').value = '';
+    document.getElementById('f-dispatched').checked = false;
+  }
+  overlay.classList.add('open');
+}
+function closeSheet(){
+  overlay.classList.remove('open');
+}
+
+document.getElementById('fab-add').addEventListener('click', ()=> openSheet(null));
+document.getElementById('btn-cancel').addEventListener('click', closeSheet);
+overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeSheet(); });
+
+document.getElementById('btn-save').addEventListener('click', ()=>{
+  const id = document.getElementById('edit-id').value;
+  const date = document.getElementById('f-date').value || todayISO();
+  const mobile = document.getElementById('f-mobile').value.trim();
+  const product = document.getElementById('f-product').value.trim();
+  const city = document.getElementById('f-city').value.trim();
+  const alt = document.getElementById('f-alt').value.trim();
+  const dispatched = document.getElementById('f-dispatched').checked;
+
+  let valid = true;
+  if(mobile.replace(/\D/g,'').length < 7){
+    document.getElementById('err-mobile').classList.add('show');
+    valid = false;
+  }else{
+    document.getElementById('err-mobile').classList.remove('show');
+  }
+  if(!product){
+    document.getElementById('err-product').classList.add('show');
+    valid = false;
+  }else{
+    document.getElementById('err-product').classList.remove('show');
+  }
+  if(!valid) return;
+
+  if(id){
+    const entry = entries.find(e=>e.id === id);
+    if(entry){
+      Object.assign(entry, {date, mobile, product, city, alt, dispatched});
+    }
+    showToast('Entry updated');
+  }else{
+    entries.push({
+      id: uid(),
+      date, mobile, product, city, alt, dispatched,
+      createdAt: Date.now()
+    });
+    showToast('Entry added');
+  }
+  saveEntries();
+  render();
+  closeSheet();
+});
+
+document.getElementById('list').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  const entry = entries.find(x=>x.id === id);
+  if(!entry) return;
+
+  if(action === 'toggle'){
+    entry.dispatched = !entry.dispatched;
+    saveEntries();
+    render();
+    showToast(entry.dispatched ? 'Marked dispatched' : 'Marked pending');
+  }else if(action === 'edit'){
+    openSheet(entry);
+  }else if(action === 'delete'){
+    if(confirm('Delete this entry? This cannot be undone.')){
+      entries = entries.filter(x=>x.id !== id);
+      saveEntries();
+      render();
+      showToast('Entry deleted');
+    }
+  }
+});
+
+document.getElementById('search-input').addEventListener('input', (e)=>{
+  searchTerm = e.target.value;
+  render();
+});
+
+document.getElementById('filter-chips').addEventListener('click', (e)=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  chip.classList.add('on');
+  activeFilter = chip.dataset.filter;
+  render();
+});
+
+loadEntries();
+render();
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+</body>
+</html>

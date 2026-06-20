@@ -529,6 +529,46 @@
     gap:6px;
   }
   .section-label i{color:var(--saffron-deep);}
+
+  /* ---- Searchable combobox (state/city) ---- */
+  .combo-field{position:relative;}
+  .combo-dropdown{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    margin-top:4px;
+    background:var(--paper-raised);
+    border:0.5px solid var(--hairline);
+    border-radius:10px;
+    max-height:200px;
+    overflow-y:auto;
+    z-index:80;
+    display:none;
+    box-shadow:0 4px 14px rgba(28,43,51,0.12);
+  }
+  .combo-dropdown.open{display:block;}
+  .combo-option{
+    padding:10px 12px;
+    font-size:14px;
+    color:var(--ink);
+    border-bottom:0.5px solid var(--hairline);
+  }
+  .combo-option:last-child{border-bottom:none;}
+  .combo-option:active, .combo-option.highlight{
+    background:var(--paper);
+  }
+  .combo-option .sub{
+    font-size:11.5px;
+    color:var(--slate);
+    margin-left:6px;
+  }
+  .combo-no-match{
+    padding:10px 12px;
+    font-size:13px;
+    color:var(--slate);
+    text-align:center;
+  }
 </style>
 </head>
 <body>
@@ -588,6 +628,11 @@
       </div>
     </div>
 
+    <div class="field">
+      <label for="f-name">Name <span style="text-transform:none;font-weight:400;color:var(--slate);">(optional)</span></label>
+      <input type="text" id="f-name" placeholder="Customer name">
+    </div>
+
     <div class="section-divider"></div>
     <div class="section-label"><i class="ti ti-shopping-cart"></i>Product items</div>
 
@@ -606,22 +651,55 @@
 
     <div class="cart-list" id="cart-list"></div>
     <div class="cart-total-row">
-      <span>Order total</span>
+      <span>Items total</span>
       <span class="amt" id="cart-total">₹0</span>
     </div>
     <div class="err" id="err-cart">Add at least one product item</div>
 
+    <div class="field" style="margin-top:14px;">
+      <label for="f-weight-slab"><i class="ti ti-truck-delivery" style="font-size:13px;color:var(--saffron-deep);"></i> Delivery weight slab</label>
+      <select id="f-weight-slab">
+        <option value="0">No delivery charge</option>
+        <option value="55">0 – 500 gm (₹55)</option>
+        <option value="65">500 – 900 gm (₹65)</option>
+        <option value="85">900 – 1000 gm (₹85)</option>
+        <option value="130">1000 – 1500 gm (₹130)</option>
+        <option value="170">1500 – 2000 gm (₹170)</option>
+      </select>
+    </div>
+
+    <div class="cart-total-row" style="border-top:none;padding-top:4px;font-weight:400;font-size:13px;color:var(--slate);">
+      <span>Delivery charge</span>
+      <span class="amt" id="delivery-charge-display" style="font-size:13px;color:var(--slate);">₹0</span>
+    </div>
+    <div class="cart-total-row" style="border-top:1.5px solid var(--ink);margin-top:4px;">
+      <span>Grand total</span>
+      <span class="amt" id="grand-total">₹0</span>
+    </div>
+
     <div class="section-divider"></div>
 
     <div class="field-row">
-      <div class="field">
-        <label for="f-city">City</label>
-        <input type="text" id="f-city" placeholder="City name">
+      <div class="field combo-field">
+        <label for="f-state">State <span style="text-transform:none;font-weight:400;color:var(--slate);">(optional)</span></label>
+        <input type="text" id="f-state" placeholder="Type to search state..." autocomplete="off">
+        <div class="combo-dropdown" id="state-dropdown"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field combo-field">
+        <label for="f-city">City <span style="text-transform:none;font-weight:400;color:var(--slate);">(optional)</span></label>
+        <input type="text" id="f-city" placeholder="Type to search city..." autocomplete="off">
+        <div class="combo-dropdown" id="city-dropdown"></div>
       </div>
       <div class="field">
         <label for="f-alt">Alternative number</label>
         <input type="tel" id="f-alt" placeholder="Optional" inputmode="numeric">
       </div>
+    </div>
+    <div class="field">
+      <label for="f-address">Address <span style="text-transform:none;font-weight:400;color:var(--slate);">(optional)</span></label>
+      <textarea id="f-address" placeholder="House no, street, landmark, pincode..." style="min-height:56px;resize:vertical;"></textarea>
     </div>
     <div class="field">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:var(--ink);font-weight:400;">
@@ -652,6 +730,51 @@ try{
   const blob = new Blob([JSON.stringify(DEFAULT_MANIFEST)], {type:'application/json'});
   document.getElementById('manifest-link').href = URL.createObjectURL(blob);
 }catch(e){}
+
+/* ---------------- India States & Cities dataset ---------------- */
+const INDIA_STATES_CITIES = {
+"Andhra Pradesh": ["Visakhapatnam","Vijayawada","Guntur","Nellore","Kurnool","Kadapa","Tirupati","Rajahmundry","Kakinada","Anantapur","Chittoor","Eluru","Ongole","Nandyal","Machilipatnam","Adoni","Tenali","Proddatur","Hindupur","Bhimavaram","Madanapalle","Guntakal","Dharmavaram","Gudivada","Srikakulam","Narasaraopet","Tadepalligudem","Chilakaluripet","Tadpatri","Amaravati","Vizianagaram","Chirala","Palasa","Kavali","Rajam"],
+"Arunachal Pradesh": ["Itanagar","Naharlagun","Pasighat","Tawang","Ziro","Bomdila","Tezu","Along","Changlang","Khonsa","Roing","Yingkiong","Daporijo","Seppa"],
+"Assam": ["Guwahati","Silchar","Dibrugarh","Jorhat","Nagaon","Tinsukia","Tezpur","Bongaigaon","Karimganj","Sivasagar","Goalpara","Barpeta","Dhubri","North Lakhimpur","Diphu","Golaghat","Mangaldoi","Nalbari","Hailakandi","Kokrajhar","Morigaon","Haflong"],
+"Bihar": ["Patna","Gaya","Bhagalpur","Muzaffarpur","Darbhanga","Purnia","Arrah","Begusarai","Katihar","Munger","Chhapra","Saharsa","Sasaram","Hajipur","Dehri","Siwan","Motihari","Nawada","Bagaha","Buxar","Kishanganj","Sitamarhi","Jamalpur","Jehanabad","Aurangabad","Madhubani","Samastipur","Bettiah","Gopalganj","Khagaria","Lakhisarai","Supaul","Araria","Banka"],
+"Chhattisgarh": ["Raipur","Bhilai","Bilaspur","Korba","Durg","Rajnandgaon","Jagdalpur","Raigarh","Ambikapur","Mahasamund","Dhamtari","Janjgir","Korea","Kanker","Kawardha","Kondagaon","Mungeli","Surajpur","Balod","Baloda Bazar"],
+"Goa": ["Panaji","Margao","Vasco da Gama","Mapusa","Ponda","Bicholim","Curchorem","Sanquelim","Cuncolim","Canacona","Valpoi"],
+"Gujarat": ["Ahmedabad","Surat","Vadodara","Rajkot","Bhavnagar","Jamnagar","Junagadh","Gandhinagar","Anand","Nadiad","Morbi","Mehsana","Bharuch","Vapi","Navsari","Veraval","Porbandar","Godhra","Patan","Surendranagar","Valsad","Palanpur","Botad","Amreli","Dahod","Bhuj","Gandhidham","Himatnagar","Jetpur","Modasa","Bardoli","Wadhwan","Kalol"],
+"Haryana": ["Faridabad","Gurugram","Panipat","Ambala","Yamunanagar","Rohtak","Hisar","Karnal","Sonipat","Panchkula","Bhiwani","Sirsa","Bahadurgarh","Jind","Thanesar","Kaithal","Rewari","Narnaul","Pundri","Kosli","Palwal","Fatehabad","Gohana","Tohana","Narwana","Jagadhri"],
+"Himachal Pradesh": ["Shimla","Solan","Dharamshala","Mandi","Kullu","Una","Bilaspur","Hamirpur","Nahan","Chamba","Kangra","Sundernagar","Paonta Sahib","Baddi","Nalagarh","Manali","Palampur","Keylong","Reckong Peo"],
+"Jharkhand": ["Ranchi","Jamshedpur","Dhanbad","Bokaro","Deoghar","Hazaribagh","Giridih","Ramgarh","Medininagar","Phusro","Chaibasa","Dumka","Godda","Pakur","Sahebganj","Gumla","Lohardaga","Jhumri Telaiya","Chirkunda"],
+"Karnataka": ["Bengaluru","Mysuru","Hubballi","Mangaluru","Belagavi","Davanagere","Ballari","Vijayapura","Shivamogga","Tumakuru","Raichur","Bidar","Hospet","Hassan","Gadag","Udupi","Chitradurga","Kolar","Mandya","Chikkamagaluru","Bagalkot","Gulbarga","Bhadravati","Robertsonpet","Karwar","Gangavati","Sirsi","Madikeri","Puttur","Ranebennur"],
+"Kerala": ["Thiruvananthapuram","Kochi","Kozhikode","Thrissur","Kollam","Alappuzha","Palakkad","Kannur","Kottayam","Malappuram","Pathanamthitta","Idukki","Kasaragod","Wayanad","Ernakulam","Munnar","Thalassery","Vatakara","Manjeri","Perinthalmanna","Ottapalam","Chalakudy","Guruvayur","Cherthala","Neyyattinkara","Punalur"],
+"Madhya Pradesh": ["Indore","Bhopal","Jabalpur","Gwalior","Ujjain","Sagar","Dewas","Satna","Ratlam","Rewa","Murwara","Singrauli","Burhanpur","Khandwa","Bhind","Chhindwara","Guna","Shivpuri","Vidisha","Damoh","Mandsaur","Khargone","Neemuch","Pithampur","Hoshangabad","Itarsi","Sehore","Betul","Seoni","Balaghat","Chhatarpur","Datia","Tikamgarh","Morena"],
+"Maharashtra": ["Mumbai","Pune","Nagpur","Nashik","Thane","Aurangabad","Solapur","Kolhapur","Amravati","Navi Mumbai","Sangli","Jalgaon","Akola","Latur","Dhule","Ahmednagar","Chandrapur","Parbhani","Ichalkaranji","Jalna","Bhusawal","Panvel","Satara","Beed","Yavatmal","Kamptee","Gondia","Wardha","Ratnagiri","Osmanabad","Nanded","Buldhana","Washim","Hingoli","Pimpri-Chinchwad","Malegaon","Ulhasnagar","Vasai-Virar","Mira-Bhayandar","Kalyan-Dombivli"],
+"Manipur": ["Imphal","Thoubal","Bishnupur","Churachandpur","Senapati","Ukhrul","Kakching","Jiribam","Tamenglong","Chandel","Moreh"],
+"Meghalaya": ["Shillong","Tura","Jowai","Nongstoin","Williamnagar","Baghmara","Resubelpara","Mairang","Mawkyrwat","Ampati"],
+"Mizoram": ["Aizawl","Lunglei","Champhai","Serchhip","Kolasib","Saiha","Lawngtlai","Mamit","Khawzawl","Saitual"],
+"Nagaland": ["Kohima","Dimapur","Mokokchung","Tuensang","Wokha","Zunheboto","Phek","Mon","Peren","Kiphire","Longleng"],
+"Odisha": ["Bhubaneswar","Cuttack","Rourkela","Berhampur","Sambalpur","Puri","Balasore","Bhadrak","Baripada","Jharsuguda","Jeypore","Bargarh","Rayagada","Dhenkanal","Angul","Kendrapara","Koraput","Nabarangpur","Phulbani","Sundargarh","Talcher","Paradip","Bhawanipatna"],
+"Punjab": ["Ludhiana","Amritsar","Jalandhar","Patiala","Bathinda","Mohali","Pathankot","Hoshiarpur","Batala","Moga","Malerkotla","Khanna","Phagwara","Muktsar","Barnala","Rajpura","Firozpur","Kapurthala","Faridkot","Sangrur","Gurdaspur","Mansa","Zirakpur","Abohar","Nabha"],
+"Rajasthan": ["Jaipur","Jodhpur","Udaipur","Kota","Bikaner","Ajmer","Bhilwara","Alwar","Bharatpur","Sikar","Pali","Sri Ganganagar","Kishangarh","Baran","Dhaulpur","Tonk","Beawar","Hanumangarh","Banswara","Churu","Jhunjhunu","Nagaur","Barmer","Jaisalmer","Dausa","Sawai Madhopur","Chittorgarh","Rajsamand","Sirohi","Jhalawar","Bundi","Dungarpur","Pratapgarh","Karauli"],
+"Sikkim": ["Gangtok","Namchi","Geyzing","Mangan","Rangpo","Jorethang","Singtam"],
+"Tamil Nadu": ["Chennai","Coimbatore","Madurai","Tiruchirappalli","Salem","Tirunelveli","Tiruppur","Erode","Vellore","Thoothukudi","Dindigul","Thanjavur","Ranipet","Sivakasi","Karur","Udhagamandalam","Hosur","Nagercoil","Kanchipuram","Cuddalore","Kumbakonam","Tiruvannamalai","Pollachi","Rajapalayam","Pudukkottai","Neyveli","Nagapattinam","Karaikudi","Krishnagiri","Namakkal","Ramanathapuram","Virudhunagar","Theni"],
+"Telangana": ["Hyderabad","Warangal","Nizamabad","Karimnagar","Khammam","Ramagundam","Mahbubnagar","Nalgonda","Adilabad","Suryapet","Miryalaguda","Siddipet","Jagtial","Mancherial","Sangareddy","Medak","Kamareddy","Wanaparthy","Vikarabad","Jangaon","Nirmal","Kothagudem","Bhongir","Zaheerabad","Bodhan"],
+"Tripura": ["Agartala","Udaipur","Dharmanagar","Kailashahar","Belonia","Khowai","Ambassa","Sonamura","Sabroom","Teliamura","Kamalpur"],
+"Uttar Pradesh": ["Lucknow","Kanpur","Ghaziabad","Agra","Varanasi","Meerut","Prayagraj","Bareilly","Aligarh","Moradabad","Saharanpur","Gorakhpur","Noida","Firozabad","Jhansi","Muzaffarnagar","Mathura","Rampur","Shahjahanpur","Farrukhabad","Ayodhya","Maunath Bhanjan","Hapur","Etawah","Mirzapur","Bulandshahr","Sambhal","Amroha","Hardoi","Fatehpur","Raebareli","Orai","Sitapur","Bahraich","Modinagar","Unnao","Jaunpur","Lakhimpur","Hathras","Banda","Pilibhit","Barabanki","Khurja","Gonda","Mainpuri","Deoria","Etah","Ghazipur","Sultanpur","Azamgarh","Bijnor"],
+"Uttarakhand": ["Dehradun","Haridwar","Roorkee","Haldwani","Rudrapur","Kashipur","Rishikesh","Pithoragarh","Ramnagar","Manglaur","Nainital","Mussoorie","Almora","Pauri","Tehri","Chamoli","Bageshwar","Champawat","Rudraprayag","Vikasnagar"],
+"West Bengal": ["Kolkata","Asansol","Siliguri","Durgapur","Bardhaman","Malda","Baharampur","Habra","Kharagpur","Shantipur","Dankuni","Dhulian","Ranaghat","Haldia","Raiganj","Krishnanagar","Nabadwip","Medinipur","Jalpaiguri","Balurghat","Basirhat","Bankura","Chakdaha","Darjeeling","Alipurduar","Purulia","Jangipur","Bolpur","Bangaon","Cooch Behar","Tamluk","Suri","Kalimpong"],
+"Andaman and Nicobar Islands": ["Port Blair","Diglipur","Mayabunder","Rangat","Car Nicobar","Bambooflat"],
+"Chandigarh": ["Chandigarh"],
+"Dadra and Nagar Haveli and Daman and Diu": ["Daman","Diu","Silvassa"],
+"Delhi": ["New Delhi","Delhi","Dwarka","Rohini","Karol Bagh","Saket","Janakpuri","Pitampura","Vasant Kunj","Lajpat Nagar","Connaught Place","Shahdara","Najafgarh","Narela"],
+"Jammu and Kashmir": ["Srinagar","Jammu","Anantnag","Baramulla","Sopore","Kathua","Udhampur","Rajouri","Punch","Kupwara","Pulwama","Budgam","Bandipora","Ganderbal","Kulgam","Shopian","Doda","Kishtwar","Ramban","Samba","Reasi"],
+"Ladakh": ["Leh","Kargil","Nubra","Zanskar","Drass"],
+"Lakshadweep": ["Kavaratti","Agatti","Minicoy","Amini","Andrott"],
+"Puducherry": ["Puducherry","Karaikal","Mahe","Yanam"]
+};
+const ALL_STATE_NAMES = Object.keys(INDIA_STATES_CITIES).sort();
+const ALL_CITIES_FLAT = []; // {city, state}
+for(const st in INDIA_STATES_CITIES){
+  INDIA_STATES_CITIES[st].forEach(c => ALL_CITIES_FLAT.push({city:c, state:st}));
+}
 
 /* ---------------- Product catalog: Neeru's Herbal Products ---------------- */
 const PRODUCT_CATALOG = [
@@ -750,7 +873,7 @@ function render(){
     if(activeFilter === 'dispatched' && !e.dispatched) return false;
     if(searchTerm){
       const productText = (e.items || []).map(it => it.name + ' ' + it.variant).join(' ');
-      const hay = [e.mobile, productText, e.city, e.alt].join(' ').toLowerCase();
+      const hay = [e.mobile, e.name, productText, e.city, e.state, e.address, e.alt].join(' ').toLowerCase();
       if(!hay.includes(searchTerm.toLowerCase())) return false;
     }
     return true;
@@ -776,7 +899,9 @@ function render(){
     const statusIcon = e.dispatched ? 'ti-circle-check' : 'ti-clock';
     const statusLabel = e.dispatched ? 'Dispatched' : 'Pending';
     const items = e.items || [];
-    const total = cartTotal(items);
+    const itemsTotal = cartTotal(items);
+    const deliveryCharge = e.deliveryCharge || 0;
+    const grandTotal = itemsTotal + deliveryCharge;
     const productLines = items.map(it => `
       <div class="pline">
         <span class="pname">${escapeHtml(it.qty + 'x ' + it.name)} <span class="pqty">(${escapeHtml(it.variant)})</span></span>
@@ -790,8 +915,10 @@ function render(){
       <div class="docket-body">
         <div class="docket-top">
           <div class="docket-products">
+            ${e.name ? `<div style="font-weight:700;font-size:14px;margin-bottom:4px;">${escapeHtml(e.name)}</div>` : ''}
             ${productLines || '<span style="color:var(--slate)">No items</span>'}
-            <div class="docket-total-row"><span>Total</span><span class="amt">₹${total}</span></div>
+            ${deliveryCharge > 0 ? `<div class="pline" style="color:var(--slate);font-size:12px;"><span>Delivery charge</span><span class="pamt">₹${deliveryCharge}</span></div>` : ''}
+            <div class="docket-total-row"><span>Total</span><span class="amt">₹${grandTotal}</span></div>
           </div>
           <div class="status-badge ${statusClass}"><i class="ti ${statusIcon}"></i>${statusLabel}</div>
         </div>
@@ -800,7 +927,9 @@ function render(){
           <div class="meta-item"><i class="ti ti-map-pin"></i><span>${escapeHtml(e.city) || '—'}</span></div>
           <div class="meta-item"><i class="ti ti-phone"></i><a href="tel:${escapeHtml(e.mobile)}">${escapeHtml(e.mobile)}</a></div>
           <div class="meta-item"><i class="ti ti-phone-plus"></i><span>${escapeHtml(e.alt) || '—'}</span></div>
+          ${e.state ? `<div class="meta-item"><i class="ti ti-map"></i><span>${escapeHtml(e.state)}</span></div>` : ''}
         </div>
+        ${e.address ? `<div style="margin-top:6px;font-size:12px;color:var(--slate);display:flex;gap:5px;align-items:flex-start;"><i class="ti ti-home" style="color:var(--saffron-deep);flex-shrink:0;margin-top:1px;"></i><span>${escapeHtml(e.address)}</span></div>` : ''}
         <div class="docket-actions">
           <button class="toggle-dispatch ${e.dispatched ? 'is-dispatched' : ''}" data-action="toggle" data-id="${e.id}">
             <i class="ti ${e.dispatched ? 'ti-rotate-2' : 'ti-truck-delivery'}"></i>${e.dispatched ? 'Mark pending' : 'Mark dispatched'}
@@ -836,8 +965,19 @@ function renderCart(){
       </div>
     `).join('');
   }
-  totalEl.textContent = '₹' + cartTotal(cart);
+  const itemsTotal = cartTotal(cart);
+  totalEl.textContent = '₹' + itemsTotal;
+  updateGrandTotal();
 }
+
+function updateGrandTotal(){
+  const itemsTotal = cartTotal(cart);
+  const deliveryCharge = parseInt(document.getElementById('f-weight-slab').value, 10) || 0;
+  document.getElementById('delivery-charge-display').textContent = '₹' + deliveryCharge;
+  document.getElementById('grand-total').textContent = '₹' + (itemsTotal + deliveryCharge);
+}
+
+document.getElementById('f-weight-slab').addEventListener('change', updateGrandTotal);
 
 document.getElementById('btn-add-item').addEventListener('click', ()=>{
   const sel = document.getElementById('f-product-select');
@@ -880,8 +1020,12 @@ function openSheet(editEntry){
     document.getElementById('edit-id').value = editEntry.id;
     document.getElementById('f-date').value = editEntry.date || todayISO();
     document.getElementById('f-mobile').value = editEntry.mobile || '';
+    document.getElementById('f-name').value = editEntry.name || '';
     document.getElementById('f-city').value = editEntry.city || '';
     document.getElementById('f-alt').value = editEntry.alt || '';
+    document.getElementById('f-state').value = editEntry.state || '';
+    document.getElementById('f-address').value = editEntry.address || '';
+    document.getElementById('f-weight-slab').value = editEntry.deliveryCharge != null ? String(editEntry.deliveryCharge) : '0';
     document.getElementById('f-dispatched').checked = !!editEntry.dispatched;
     cart = (editEntry.items || []).map(it => ({...it}));
   }else{
@@ -889,8 +1033,12 @@ function openSheet(editEntry){
     document.getElementById('edit-id').value = '';
     document.getElementById('f-date').value = todayISO();
     document.getElementById('f-mobile').value = '';
+    document.getElementById('f-name').value = '';
     document.getElementById('f-city').value = '';
     document.getElementById('f-alt').value = '';
+    document.getElementById('f-state').value = '';
+    document.getElementById('f-address').value = '';
+    document.getElementById('f-weight-slab').value = '0';
     document.getElementById('f-dispatched').checked = false;
     cart = [];
   }
@@ -909,8 +1057,12 @@ document.getElementById('btn-save').addEventListener('click', ()=>{
   const id = document.getElementById('edit-id').value;
   const date = document.getElementById('f-date').value || todayISO();
   const mobile = document.getElementById('f-mobile').value.trim();
+  const name = document.getElementById('f-name').value.trim();
   const city = document.getElementById('f-city').value.trim();
   const alt = document.getElementById('f-alt').value.trim();
+  const state = document.getElementById('f-state').value.trim();
+  const address = document.getElementById('f-address').value.trim();
+  const deliveryCharge = parseInt(document.getElementById('f-weight-slab').value, 10) || 0;
   const dispatched = document.getElementById('f-dispatched').checked;
 
   let valid = true;
@@ -933,13 +1085,13 @@ document.getElementById('btn-save').addEventListener('click', ()=>{
   if(id){
     const entry = entries.find(e=>e.id === id);
     if(entry){
-      Object.assign(entry, {date, mobile, city, alt, dispatched, items});
+      Object.assign(entry, {date, mobile, name, city, alt, state, address, deliveryCharge, dispatched, items});
     }
     showToast('Entry updated');
   }else{
     entries.push({
       id: uid(),
-      date, mobile, city, alt, dispatched, items,
+      date, mobile, name, city, alt, state, address, deliveryCharge, dispatched, items,
       createdAt: Date.now()
     });
     showToast('Entry added');

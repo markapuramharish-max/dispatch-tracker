@@ -33,14 +33,6 @@
     min-height:100vh;
     padding-bottom:100px;
   }
-  @font-face{
-    font-family:'Spectral';
-    src:local('Spectral');
-  }
-  .ledger-num{
-    font-family:'Courier New', ui-monospace, monospace;
-    font-variant-numeric:tabular-nums;
-  }
 
   /* ---- Header ---- */
   header{
@@ -50,11 +42,6 @@
     position:sticky;
     top:0;
     z-index:20;
-  }
-  .header-row{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
   }
   .brand{
     font-size:19px;
@@ -123,25 +110,6 @@
     color:var(--slate);
     font-size:16px;
   }
-  .filter-btn{
-    height:40px;
-    width:40px;
-    border-radius:10px;
-    border:0.5px solid var(--hairline);
-    background:var(--paper-raised);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--ink);
-    font-size:17px;
-    flex-shrink:0;
-    position:relative;
-  }
-  .filter-btn.active{
-    background:var(--ink);
-    color:var(--paper);
-    border-color:var(--ink);
-  }
   .filter-chip-row{
     display:flex;
     gap:6px;
@@ -195,23 +163,11 @@
   .docket-stub{
     width:46px;
     flex-shrink:0;
-    background:repeating-linear-gradient(
-      to bottom,
-      var(--ink) 0px, var(--ink) 6px, transparent 6px, transparent 11px
-    );
     background-color:var(--ink);
-    background-image:
-      radial-gradient(circle at 46px 0, transparent 6px, var(--paper) 6.5px),
-      radial-gradient(circle at 46px 100%, transparent 6px, var(--paper) 6.5px);
     display:flex;
     align-items:center;
     justify-content:center;
     position:relative;
-  }
-  .docket-stub::before{
-    content:'';
-    position:absolute;
-    top:0; bottom:0; right:-1px;
     border-right:2px dashed rgba(247,244,237,0.35);
   }
   .docket-stub .sno{
@@ -234,12 +190,36 @@
     align-items:flex-start;
     gap:8px;
   }
-  .docket-product{
-    font-size:14.5px;
-    font-weight:500;
-    line-height:1.4;
+  .docket-products{
+    font-size:13.5px;
+    line-height:1.55;
     color:var(--ink);
     word-break:break-word;
+  }
+  .docket-products .pline{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .docket-products .pname{font-weight:500;}
+  .docket-products .pqty{color:var(--slate);font-size:12px;}
+  .docket-products .pamt{
+    font-family:'Courier New', monospace;
+    color:var(--slate);
+    flex-shrink:0;
+  }
+  .docket-total-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+    padding-top:6px;
+    border-top:0.5px dashed var(--hairline);
+    font-size:13px;
+    font-weight:700;
+  }
+  .docket-total-row .amt{
+    font-family:'Courier New', monospace;
+    color:var(--saffron-deep);
   }
   .status-badge{
     flex-shrink:0;
@@ -318,6 +298,7 @@
     align-items:center;
     justify-content:center;
     z-index:30;
+    box-shadow:0 2px 8px rgba(0,0,0,0.18);
   }
   .fab:active{transform:scale(0.94);}
 
@@ -337,7 +318,7 @@
   .sheet{
     background:var(--paper);
     width:100%;
-    max-height:88vh;
+    max-height:90vh;
     border-radius:18px 18px 0 0;
     padding:8px 18px 22px;
     overflow-y:auto;
@@ -369,7 +350,7 @@
     letter-spacing:0.04em;
     margin-bottom:5px;
   }
-  .field input, .field textarea{
+  .field input, .field select, .field textarea{
     width:100%;
     border:0.5px solid var(--hairline);
     background:var(--paper-raised);
@@ -378,11 +359,6 @@
     font-size:15px;
     color:var(--ink);
     font-family:inherit;
-  }
-  .field textarea{
-    min-height:64px;
-    resize:vertical;
-    line-height:1.5;
   }
   .field-row{display:flex;gap:10px;}
   .field-row .field{flex:1;}
@@ -437,30 +413,130 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .toast i{font-size:14px;color:var(--success);}
 
-  .install-banner{
-    margin:12px 16px 0;
-    background:var(--success-bg);
-    color:var(--success);
-    border-radius:10px;
-    padding:10px 12px;
-    font-size:12.5px;
+  /* ---- Product picker ---- */
+  .product-picker-row{
     display:flex;
-    align-items:flex-start;
     gap:8px;
-    line-height:1.4;
+    align-items:flex-end;
   }
-  .install-banner i{font-size:15px;margin-top:1px;flex-shrink:0;}
-  .install-banner b{font-weight:500;}
+  .product-picker-row .field{flex:1;margin-bottom:0;}
+  .qty-field{width:72px;flex-shrink:0;}
+  .qty-field input{text-align:center;}
+  .add-item-btn{
+    flex-shrink:0;
+    width:42px;
+    height:42px;
+    border-radius:10px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    font-size:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .product-hint{
+    font-size:11.5px;
+    color:var(--slate);
+    margin-top:5px;
+  }
+  .cart-list{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .cart-empty{
+    font-size:12.5px;
+    color:var(--slate);
+    text-align:center;
+    padding:14px 0;
+    border:1px dashed var(--hairline);
+    border-radius:10px;
+  }
+  .cart-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--paper-raised);
+    border:0.5px solid var(--hairline);
+    border-radius:10px;
+    padding:8px 10px;
+  }
+  .cart-row .ci-name{
+    flex:1;
+    font-size:13px;
+    font-weight:500;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .cart-row .ci-sub{
+    font-size:11px;
+    color:var(--slate);
+    font-weight:400;
+  }
+  .cart-row .ci-amt{
+    font-family:'Courier New', monospace;
+    font-size:13px;
+    color:var(--saffron-deep);
+    flex-shrink:0;
+    width:64px;
+    text-align:right;
+  }
+  .cart-row .ci-remove{
+    flex-shrink:0;
+    width:26px;
+    height:26px;
+    border-radius:7px;
+    border:none;
+    background:var(--danger-bg);
+    color:var(--danger);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .cart-total-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--hairline);
+    font-size:14.5px;
+    font-weight:700;
+  }
+  .cart-total-row .amt{
+    font-family:'Courier New', monospace;
+    color:var(--saffron-deep);
+    font-size:17px;
+  }
+  .section-divider{
+    height:1px;
+    background:var(--hairline);
+    margin:18px 0 14px;
+  }
+  .section-label{
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .section-label i{color:var(--saffron-deep);}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-row">
-    <div>
-      <div class="brand">Dispatch<span class="dot">•</span>Register</div>
-      <div class="header-sub">Order &amp; dispatch tracking</div>
-    </div>
+  <div>
+    <div class="brand">Dispatch<span class="dot">•</span>Register</div>
+    <div class="header-sub">Order &amp; dispatch tracking</div>
   </div>
   <div class="stats-strip">
     <div class="stat-pill">
@@ -499,6 +575,7 @@
     <div class="sheet-handle"></div>
     <h2 id="sheet-title"><i class="ti ti-clipboard-text"></i><span>New entry</span></h2>
     <input type="hidden" id="edit-id">
+
     <div class="field-row">
       <div class="field">
         <label for="f-date">Date</label>
@@ -510,11 +587,32 @@
         <div class="err" id="err-mobile">Enter a valid mobile number</div>
       </div>
     </div>
-    <div class="field">
-      <label for="f-product">Product items</label>
-      <textarea id="f-product" placeholder="e.g. 2x Cotton Saree (Blue), 1x Blouse Piece"></textarea>
-      <div class="err" id="err-product">Add at least one product item</div>
+
+    <div class="section-divider"></div>
+    <div class="section-label"><i class="ti ti-shopping-cart"></i>Product items</div>
+
+    <div class="product-picker-row">
+      <div class="field">
+        <label for="f-product-select">Product / size</label>
+        <select id="f-product-select"></select>
+      </div>
+      <div class="field qty-field">
+        <label for="f-qty">Qty</label>
+        <input type="number" id="f-qty" value="1" min="1">
+      </div>
+      <button class="add-item-btn" id="btn-add-item" type="button"><i class="ti ti-plus"></i></button>
     </div>
+    <div class="product-hint" id="product-price-hint"></div>
+
+    <div class="cart-list" id="cart-list"></div>
+    <div class="cart-total-row">
+      <span>Order total</span>
+      <span class="amt" id="cart-total">₹0</span>
+    </div>
+    <div class="err" id="err-cart">Add at least one product item</div>
+
+    <div class="section-divider"></div>
+
     <div class="field-row">
       <div class="field">
         <label for="f-city">City</label>
@@ -532,8 +630,8 @@
       </label>
     </div>
     <div class="form-actions">
-      <button class="btn-cancel" id="btn-cancel">Cancel</button>
-      <button class="btn-save" id="btn-save">Save entry</button>
+      <button class="btn-cancel" id="btn-cancel" type="button">Cancel</button>
+      <button class="btn-save" id="btn-save" type="button">Save entry</button>
     </div>
   </div>
 </div>
@@ -555,10 +653,48 @@ try{
   document.getElementById('manifest-link').href = URL.createObjectURL(blob);
 }catch(e){}
 
-const STORAGE_KEY = 'dispatch_register_entries_v1';
+/* ---------------- Product catalog: Neeru's Herbal Products ---------------- */
+const PRODUCT_CATALOG = [
+  { id:'sunnipindi_half', name:'Sunnipindi', variant:'1/2 Kg', price:400 },
+  { id:'kasturi_100', name:'Kasturi Pasupu Face Pack Powder', variant:'100 gm', price:180 },
+  { id:'kumkumathi_50', name:'Kumkumathi Thailam', variant:'50 ml', price:250 },
+  { id:'kumkumathi_120', name:'Kumkumathi Thailam', variant:'120 ml', price:500 },
+  { id:'vco_50', name:'Virgin Coconut Oil', variant:'50 ml', price:150 },
+  { id:'hairoil_200', name:'Herbal Hair Growth Oil', variant:'200 ml', price:400 },
+  { id:'hairoil_500', name:'Herbal Hair Growth Oil', variant:'1/2 Litre', price:980 },
+  { id:'shikakai_half', name:'Herbal Hair Growth Shikakai Powder', variant:'1/2 Kg', price:380 },
+  { id:'hairoilkit', name:'Hair Oil Raw Material Kit', variant:'Kit', price:380 },
+  { id:'pco_1l', name:'Pure Coconut Oil', variant:'1 Litre', price:450 },
+  { id:'sunnipindikit', name:'Sunnipindi Raw Material Kit', variant:'Kit', price:400 },
+  { id:'greenpesalu', name:'Green Pesalu', variant:'pack', price:80 },
+  { id:'babysunnipindi', name:"Baby's Sunnipindi (Below 2 Yrs)", variant:'1/2 Kg', price:400 },
+  { id:'babymassageoil', name:"Baby's Body Massage Oil (2mo–7yr)", variant:'100 ml', price:400 },
+  { id:'sunnipindisoap', name:'Sunnipindi Soap', variant:'Each', price:100 },
+];
+
+function populateProductSelect(){
+  const sel = document.getElementById('f-product-select');
+  sel.innerHTML = PRODUCT_CATALOG.map(p =>
+    `<option value="${p.id}">${escapeHtml(p.name)} — ${escapeHtml(p.variant)} (₹${p.price})</option>`
+  ).join('');
+  updatePriceHint();
+}
+function getProductById(id){
+  return PRODUCT_CATALOG.find(p => p.id === id);
+}
+function updatePriceHint(){
+  const sel = document.getElementById('f-product-select');
+  const p = getProductById(sel.value);
+  if(!p) return;
+  const hint = document.getElementById('product-price-hint');
+  hint.textContent = `₹${p.price} each`;
+}
+
+const STORAGE_KEY = 'dispatch_register_entries_v2';
 let entries = [];
 let activeFilter = 'all';
 let searchTerm = '';
+let cart = []; // current form's product line items: [{productId, name, variant, price, qty}]
 
 function loadEntries(){
   try{
@@ -598,13 +734,23 @@ function todayISO(){
   return local.toISOString().slice(0,10);
 }
 
+function cartTotal(items){
+  return items.reduce((sum, it) => sum + (it.price * it.qty), 0);
+}
+
+function productSummaryText(items){
+  return items.map(it => `${it.qty}x ${it.name} (${it.variant})`).join(', ');
+}
+
+/* ---------------- Render entry list ---------------- */
 function render(){
   const list = document.getElementById('list');
   let filtered = entries.filter(e=>{
     if(activeFilter === 'pending' && e.dispatched) return false;
     if(activeFilter === 'dispatched' && !e.dispatched) return false;
     if(searchTerm){
-      const hay = [e.mobile, e.product, e.city, e.alt].join(' ').toLowerCase();
+      const productText = (e.items || []).map(it => it.name + ' ' + it.variant).join(' ');
+      const hay = [e.mobile, productText, e.city, e.alt].join(' ').toLowerCase();
       if(!hay.includes(searchTerm.toLowerCase())) return false;
     }
     return true;
@@ -624,17 +770,29 @@ function render(){
     return;
   }
 
-  list.innerHTML = filtered.map((e, idx) => {
+  list.innerHTML = filtered.map((e) => {
     const sno = entries.length - entries.findIndex(x => x.id === e.id);
     const statusClass = e.dispatched ? 'dispatched' : 'pending';
     const statusIcon = e.dispatched ? 'ti-circle-check' : 'ti-clock';
     const statusLabel = e.dispatched ? 'Dispatched' : 'Pending';
+    const items = e.items || [];
+    const total = cartTotal(items);
+    const productLines = items.map(it => `
+      <div class="pline">
+        <span class="pname">${escapeHtml(it.qty + 'x ' + it.name)} <span class="pqty">(${escapeHtml(it.variant)})</span></span>
+        <span class="pamt">₹${it.price * it.qty}</span>
+      </div>
+    `).join('');
+
     return `
     <div class="docket" data-id="${e.id}">
       <div class="docket-stub"><span class="sno">#${String(sno).padStart(3,'0')}</span></div>
       <div class="docket-body">
         <div class="docket-top">
-          <div class="docket-product">${escapeHtml(e.product)}</div>
+          <div class="docket-products">
+            ${productLines || '<span style="color:var(--slate)">No items</span>'}
+            <div class="docket-total-row"><span>Total</span><span class="amt">₹${total}</span></div>
+          </div>
           <div class="status-badge ${statusClass}"><i class="ti ${statusIcon}"></i>${statusLabel}</div>
         </div>
         <div class="docket-meta">
@@ -663,29 +821,80 @@ function showToast(msg){
   window._toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
 }
 
+/* ---------------- Cart (inside the form sheet) ---------------- */
+function renderCart(){
+  const wrap = document.getElementById('cart-list');
+  const totalEl = document.getElementById('cart-total');
+  if(cart.length === 0){
+    wrap.innerHTML = `<div class="cart-empty">No items added yet</div>`;
+  }else{
+    wrap.innerHTML = cart.map((it, idx) => `
+      <div class="cart-row">
+        <div class="ci-name">${escapeHtml(it.name)} <span class="ci-sub">${escapeHtml(it.variant)} × ${it.qty}</span></div>
+        <div class="ci-amt">₹${it.price * it.qty}</div>
+        <button class="ci-remove" data-idx="${idx}" type="button"><i class="ti ti-x" style="font-size:14px;"></i></button>
+      </div>
+    `).join('');
+  }
+  totalEl.textContent = '₹' + cartTotal(cart);
+}
+
+document.getElementById('btn-add-item').addEventListener('click', ()=>{
+  const sel = document.getElementById('f-product-select');
+  const qtyInput = document.getElementById('f-qty');
+  const p = getProductById(sel.value);
+  if(!p) return;
+  let qty = parseInt(qtyInput.value, 10) || 1;
+
+  const existing = cart.find(it => it.productId === p.id);
+  if(existing){
+    existing.qty += qty;
+  }else{
+    cart.push({ productId: p.id, name: p.name, variant: p.variant, price: p.price, qty });
+  }
+  document.getElementById('err-cart').classList.remove('show');
+  renderCart();
+  qtyInput.value = 1;
+});
+
+document.getElementById('cart-list').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.ci-remove');
+  if(!btn) return;
+  const idx = parseInt(btn.dataset.idx, 10);
+  cart.splice(idx, 1);
+  renderCart();
+});
+
+document.getElementById('f-product-select').addEventListener('change', updatePriceHint);
+
+/* ---------------- Sheet open/close ---------------- */
 const overlay = document.getElementById('sheet-overlay');
 function openSheet(editEntry){
   document.getElementById('err-mobile').classList.remove('show');
-  document.getElementById('err-product').classList.remove('show');
+  document.getElementById('err-cart').classList.remove('show');
+  populateProductSelect();
+  document.getElementById('f-qty').value = 1;
+
   if(editEntry){
     document.querySelector('#sheet-title span').textContent = 'Edit entry';
     document.getElementById('edit-id').value = editEntry.id;
     document.getElementById('f-date').value = editEntry.date || todayISO();
     document.getElementById('f-mobile').value = editEntry.mobile || '';
-    document.getElementById('f-product').value = editEntry.product || '';
     document.getElementById('f-city').value = editEntry.city || '';
     document.getElementById('f-alt').value = editEntry.alt || '';
     document.getElementById('f-dispatched').checked = !!editEntry.dispatched;
+    cart = (editEntry.items || []).map(it => ({...it}));
   }else{
     document.querySelector('#sheet-title span').textContent = 'New entry';
     document.getElementById('edit-id').value = '';
     document.getElementById('f-date').value = todayISO();
     document.getElementById('f-mobile').value = '';
-    document.getElementById('f-product').value = '';
     document.getElementById('f-city').value = '';
     document.getElementById('f-alt').value = '';
     document.getElementById('f-dispatched').checked = false;
+    cart = [];
   }
+  renderCart();
   overlay.classList.add('open');
 }
 function closeSheet(){
@@ -700,7 +909,6 @@ document.getElementById('btn-save').addEventListener('click', ()=>{
   const id = document.getElementById('edit-id').value;
   const date = document.getElementById('f-date').value || todayISO();
   const mobile = document.getElementById('f-mobile').value.trim();
-  const product = document.getElementById('f-product').value.trim();
   const city = document.getElementById('f-city').value.trim();
   const alt = document.getElementById('f-alt').value.trim();
   const dispatched = document.getElementById('f-dispatched').checked;
@@ -712,24 +920,26 @@ document.getElementById('btn-save').addEventListener('click', ()=>{
   }else{
     document.getElementById('err-mobile').classList.remove('show');
   }
-  if(!product){
-    document.getElementById('err-product').classList.add('show');
+  if(cart.length === 0){
+    document.getElementById('err-cart').classList.add('show');
     valid = false;
   }else{
-    document.getElementById('err-product').classList.remove('show');
+    document.getElementById('err-cart').classList.remove('show');
   }
   if(!valid) return;
+
+  const items = cart.map(it => ({...it}));
 
   if(id){
     const entry = entries.find(e=>e.id === id);
     if(entry){
-      Object.assign(entry, {date, mobile, product, city, alt, dispatched});
+      Object.assign(entry, {date, mobile, city, alt, dispatched, items});
     }
     showToast('Entry updated');
   }else{
     entries.push({
       id: uid(),
-      date, mobile, product, city, alt, dispatched,
+      date, mobile, city, alt, dispatched, items,
       createdAt: Date.now()
     });
     showToast('Entry added');

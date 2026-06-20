@@ -702,6 +702,11 @@
       <textarea id="f-address" placeholder="House no, street, landmark, pincode..." style="min-height:56px;resize:vertical;"></textarea>
     </div>
     <div class="field">
+      <label for="f-image">Upload Image (Optional)</label>
+      <input type="file" id="f-image" accept="image/*">
+      <div id="image-preview" style="margin-top:10px;"></div>
+    </div>
+    <div class="field">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;color:var(--ink);font-weight:400;">
         <input type="checkbox" id="f-dispatched" style="width:18px;height:18px;margin:0;">
         Mark as dispatched
@@ -818,6 +823,7 @@ let entries = [];
 let activeFilter = 'all';
 let searchTerm = '';
 let cart = []; // current form's product line items: [{productId, name, variant, price, qty}]
+let uploadedImage = '';
 
 function loadEntries(){
   try{
@@ -1138,6 +1144,18 @@ document.getElementById('filter-chips').addEventListener('click', (e)=>{
   chip.classList.add('on');
   activeFilter = chip.dataset.filter;
   render();
+});
+
+
+document.getElementById("f-image").addEventListener("change",function(e){
+ const f=e.target.files[0];
+ if(!f)return;
+ const r=new FileReader();
+ r.onload=function(){
+   uploadedImage=r.result;
+   document.getElementById("image-preview").innerHTML='<img src="'+uploadedImage+'" style="max-width:120px;border-radius:8px;border:1px solid #ccc">';
+ };
+ r.readAsDataURL(f);
 });
 
 loadEntries();
